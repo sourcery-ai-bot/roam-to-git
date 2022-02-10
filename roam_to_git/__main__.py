@@ -103,9 +103,7 @@ def main():
     for f in args.formats:
         reset_git_directory(git_path / f)
 
-    # check if we need to fetch a format from roam
-    roam_formats = [f for f in args.formats if f in ROAM_FORMATS]
-    if len(roam_formats) > 0:
+    if roam_formats := [f for f in args.formats if f in ROAM_FORMATS]:
         with create_temporary_directory(autodelete=not config.debug) as root_zip_path:
             root_zip_path = Path(root_zip_path)
             scrap(root_zip_path, roam_formats, config)

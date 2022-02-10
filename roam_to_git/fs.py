@@ -25,11 +25,12 @@ def get_zip_path(zip_dir_path: Path) -> Path:
 
 def reset_git_directory(git_path: Path, skip=(".git",)):
     """Remove all files in a git directory"""
-    to_remove: List[Path] = []
-    for file in git_path.glob("**/*"):
-        if any(skip_item in file.parts for skip_item in skip):
-            continue
-        to_remove.append(file)
+    to_remove: List[Path] = [
+        file
+        for file in git_path.glob("**/*")
+        if all(skip_item not in file.parts for skip_item in skip)
+    ]
+
     # Now we remove starting from the end to remove children before parents
     to_remove = sorted(set(to_remove))[::-1]
     for file in to_remove:

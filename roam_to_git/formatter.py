@@ -72,8 +72,11 @@ def extract_links(string: str) -> List[Match]:
 def add_back_links(content: str, back_links: List[Tuple[str, Match]]) -> str:
     if not back_links:
         return content
-    files = sorted(set((file_name[:-3], match) for file_name, match in back_links),
-                   key=lambda e: (e[0], e[1].start()))
+    files = sorted(
+        {(file_name[:-3], match) for file_name, match in back_links},
+        key=lambda e: (e[0], e[1].start()),
+    )
+
     new_lines = []
     file_before = None
     for file, match in files:

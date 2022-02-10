@@ -41,14 +41,10 @@ class Browser:
             self.browser = webdriver.Firefox(firefox_profile=firefox_profile,
                                              firefox_options=firefox_options,
                                              service_log_path=os.devnull)
-        elif browser == Browser.PHANTOMJS:
+        elif browser in [Browser.PHANTOMJS, Browser.Chrome]:
             raise NotImplementedError()
             # TODO configure
             # self.browser = webdriver.PhantomJS()
-        elif browser == Browser.Chrome:
-            raise NotImplementedError()
-            # TODO configure
-            # self.browser = webdriver.Chrome()
         else:
             raise ValueError(f"Invalid browser '{browser}")
 
@@ -94,22 +90,20 @@ class HTMLElement:
         self.debug = debug
 
     def click(self):
-        if self.debug:
-            try:
-                return self.html_element.click()
-            except Exception:
-                pdb.set_trace()
-        else:
+        if not self.debug:
             return self.html_element.click()
+        try:
+            return self.html_element.click()
+        except Exception:
+            pdb.set_trace()
 
     def send_keys(self, keys: str):
-        if self.debug:
-            try:
-                return self.html_element.send_keys(keys)
-            except Exception:
-                pdb.set_trace()
-        else:
+        if not self.debug:
             return self.html_element.send_keys(keys)
+        try:
+            return self.html_element.send_keys(keys)
+        except Exception:
+            pdb.set_trace()
 
     @property
     def text(self) -> str:
@@ -128,10 +122,7 @@ class Config:
         self.password = os.environ["ROAMRESEARCH_PASSWORD"]
         assert self.user
         assert self.password
-        if database:
-            self.database: Optional[str] = database
-        else:
-            self.database = os.environ["ROAMRESEARCH_DATABASE"]
+        self.database = database or os.environ["ROAMRESEARCH_DATABASE"]
         assert self.database, "Please define the Roam database you want to backup."
         self.debug = debug
         self.gui = gui
@@ -151,8 +142,6 @@ def download_rr_archive(output_type: str,
                       debug=config.debug,
                       output_directory=output_directory)
 
-    if config.debug:
-        pass
     try:
         return _download_rr_archive(browser, output_type, output_directory, config)
     except (KeyboardInterrupt, SystemExit):
@@ -198,7 +187,7 @@ def _download_rr_archive(browser: Browser,
             strong = browser.find_element_by_css_selector("strong", check=False)
         except NoSuchElementException:
             continue
-        if "database's you are an admin of" == strong.text.lower():
+        if strong.text.lower() == "database's you are an admin of":
             logger.error(
                 "You seems to have multiple databases. Please select it with the option "
                 "--database")
